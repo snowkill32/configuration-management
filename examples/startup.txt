@@ -1,0 +1,7 @@
+ls
+ls /docs
+cd
+cd /docs
+  ls   /
+
+exit

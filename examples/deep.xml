@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vfs name="deep">
+  <file name="readme.txt">VFS with nested directories.</file>
+  <dir name="docs">
+    <file name="notes.txt">Документы.</file>
+    <dir name="projects">
+      <dir name="demo">
+        <file name="data.bin" encoding="base64">AAEC/w==</file>
+        <dir name="src">
+          <file name="main.txt">Hello from the deepest directory.</file>
+        </dir>
+      </dir>
+    </dir>
+  </dir>
+</vfs>
