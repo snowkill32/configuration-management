@@ -1,5 +1,3 @@
-"""Минимальная командная оболочка для варианта 24."""
-
 import sys
 from pathlib import Path
 
@@ -7,25 +5,22 @@ MAX_PATH_ARGUMENTS = 1
 
 
 class Shell:
-    """Обрабатывает команды и поддерживает цикл ввода."""
-
     def __init__(self, name="default", output=None, vfs=None):
-        """Задает имя VFS и поток для вывода сообщений."""
         self.vfs = vfs
         self.name = vfs.name if vfs is not None else name
+        # Обычно вывод идет в консоль, а в тестах сохраняется в памяти.
         self.output = output if output is not None else sys.stdout
         self.running = True
 
     @property
     def prompt(self):
-        """Возвращает приглашение с именем VFS."""
         return f"{self.name}:/$ "
 
     def execute(self, line):
-        """Разделяет ввод по пробелам и выполняет одну команду."""
         parts = line.split()
         if not parts:
             return
+        # Первое слово — команда, остальные попадают в список args.
         command, *args = parts
         if command == "exit":
             if args:
@@ -39,7 +34,6 @@ class Shell:
             raise ValueError(f"неизвестная команда: {command}")
 
     def repl(self):
-        """Читает команды до exit, конца ввода или Ctrl+C."""
         while self.running:
             try:
                 line = input(self.prompt)
@@ -51,8 +45,8 @@ class Shell:
                 break
 
     def run_script(self, path):
-        """Показывает диалог из файла и останавливается при первой ошибке."""
         try:
+            # utf-8-sig также убирает служебную отметку BOM в начале файла.
             lines = Path(path).read_text(encoding="utf-8-sig").splitlines()
         except (OSError, UnicodeError) as error:
             print(f"Ошибка чтения скрипта: {error}", file=self.output)

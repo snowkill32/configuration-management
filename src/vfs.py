@@ -1,20 +1,15 @@
-"""Загрузка XML-файловой системы целиком в память."""
-
 import base64
 import binascii
 import xml.etree.ElementTree as ET
 
 
 class VFS:
-    """Хранит имя, пути каталогов и содержимое файлов в памяти."""
-
     def __init__(self, name, entries):
-        """Сохраняет имя VFS и словарь ее файлов и каталогов."""
         self.name = name
+        # В словаре None означает папку, а bytes — содержимое файла.
         self.entries = entries
 
     def describe(self):
-        """Возвращает список загруженных путей для отладочного вывода."""
         lines = []
         for path, data in sorted(self.entries.items()):
             kind = "каталог" if data is None else f"файл, {len(data)} байт"
@@ -23,7 +18,6 @@ class VFS:
 
 
 def file_data(element):
-    """Читает текст UTF-8 или декодирует двоичные данные base64."""
     if len(element):
         raise ValueError("файл не может содержать вложенные элементы")
     text = element.text or ""
@@ -33,13 +27,13 @@ def file_data(element):
     if encoding != "base64":
         raise ValueError(f"неизвестная кодировка файла: {encoding}")
     try:
+        # Убираем пробелы и переносы перед чтением данных base64.
         return base64.b64decode("".join(text.split()), validate=True)
     except (binascii.Error, ValueError) as error:
         raise ValueError("неверные данные base64") from error
 
 
 def validate_node(element):
-    """Проверяет имя, тип и атрибуты узла; возвращает его имя."""
     name = element.get("name", "")
     if not name or name in (".", "..") or any(c in name for c in "/\\\0"):
         raise ValueError(f"недопустимое имя: {name!r}")
@@ -52,7 +46,6 @@ def validate_node(element):
 
 
 def add_node(element, parent, entries):
-    """Добавляет XML-узел и его потомков в словарь виртуальных путей."""
     name = validate_node(element)
     path = parent.rstrip("/") + "/" + name
     if path in entries:
@@ -64,13 +57,13 @@ def add_node(element, parent, entries):
             raise ValueError(f"каталог содержит текст: {path}")
         entries[path] = None
         for child in element:
+            # Вызываем эту же функцию для содержимого вложенной папки.
             add_node(child, path, entries)
     if (element.tail or "").strip():
         raise ValueError(f"текст вне файла: {path}")
 
 
 def load_vfs(path):
-    """Читает и проверяет XML, не изменяя исходный файл на диске."""
     try:
         root = ET.parse(path).getroot()
     except ET.ParseError as error:

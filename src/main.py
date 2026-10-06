@@ -1,5 +1,3 @@
-"""Точка входа консольного эмулятора."""
-
 import argparse
 from pathlib import Path
 import sys
@@ -7,11 +5,11 @@ import sys
 from shell import Shell
 from vfs import load_vfs
 
+# parents[0] — папка src, parents[1] — папка проекта.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def parse_args():
-    """Получает пути VFS и стартового скрипта из командной строки."""
     parser = argparse.ArgumentParser(description="Эмулятор: вариант 24")
     parser.add_argument(
         "--vfs", type=Path, default=PROJECT_ROOT / "examples/minimal.xml",
@@ -24,7 +22,6 @@ def parse_args():
 
 
 def main():
-    """Показывает параметры, выполняет скрипт и запускает диалог."""
     args = parse_args()
     print(f"VFS: {args.vfs}")
     print(f"Стартовый скрипт: {args.script or 'не задан'}")
@@ -36,6 +33,7 @@ def main():
     print(f"Загружена VFS: {vfs.name}")
     print(vfs.describe())
     shell = Shell(vfs=vfs)
+    # Выполняем файл, только если он указан; False означает ошибку.
     if args.script and not shell.run_script(args.script):
         return 1
     shell.repl()

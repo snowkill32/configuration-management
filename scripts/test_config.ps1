@@ -8,6 +8,7 @@ foreach ($name in @('minimal', 'files', 'deep')) {
     & python $mainPath --vfs $vfsPath --script $startupPath
     if ($LASTEXITCODE -ne 0) { throw "Explicit parameters failed: $name" }
 
+    # Передаем exit в программу, чтобы она не ждала ввода.
     'exit' | & python $mainPath --vfs $vfsPath
     if ($LASTEXITCODE -ne 0) { throw "Interactive mode failed: $name" }
 }

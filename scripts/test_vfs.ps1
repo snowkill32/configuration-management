@@ -5,6 +5,7 @@ $startupPath = Join-Path $projectRoot 'examples/startup.txt'
 
 foreach ($name in @('minimal', 'files', 'deep')) {
     $vfsPath = Join-Path $projectRoot "examples/$name.xml"
+    # Сравниваем хеш XML до и после запуска: файл не должен меняться.
     $before = (Get-FileHash -LiteralPath $vfsPath).Hash
     & python $mainPath --vfs $vfsPath --script $startupPath
     if ($LASTEXITCODE -ne 0) { throw "VFS loading failed: $name" }

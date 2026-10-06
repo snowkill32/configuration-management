@@ -1,5 +1,3 @@
-"""Проверки XML, двоичных данных и работы только в памяти."""
-
 from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
@@ -12,16 +10,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class VFSTests(unittest.TestCase):
-    """Проверяет загрузку и валидацию виртуальной файловой системы."""
-
     def test_minimal(self):
-        """Минимальный XML содержит только корневой каталог."""
         vfs = load_vfs(ROOT / "examples/minimal.xml")
         self.assertEqual(vfs.name, "minimal")
         self.assertEqual(vfs.entries, {"/": None})
 
     def test_text_and_binary(self):
-        """Текст сохраняется как UTF-8, base64 дает исходные байты."""
         vfs = load_vfs(ROOT / "examples/files.xml")
         self.assertEqual(vfs.entries["/binary.bin"], bytes([0, 1, 2, 255]))
         self.assertEqual(vfs.entries["/empty.txt"], b"")
@@ -29,7 +23,6 @@ class VFSTests(unittest.TestCase):
         self.assertIn("Пример", vfs.entries["/readme.txt"].decode("utf-8"))
 
     def test_deep_structure(self):
-        """Вложенные каталоги и файлы загружаются без распаковки."""
         vfs = load_vfs(ROOT / "examples/deep.xml")
         path = "/docs/projects/demo/src/main.txt"
         self.assertEqual(
@@ -39,7 +32,6 @@ class VFSTests(unittest.TestCase):
         self.assertIn(path, vfs.describe())
 
     def test_source_unchanged(self):
-        """Изменение данных в памяти не меняет XML и не создает файлов."""
         with TemporaryDirectory() as folder:
             path = Path(folder) / "vfs.xml"
             xml = b'<vfs name="test"><file name="a.txt">data</file></vfs>'
@@ -50,13 +42,11 @@ class VFSTests(unittest.TestCase):
             self.assertEqual(list(Path(folder).iterdir()), [path])
 
     def test_missing_file(self):
-        """Отсутствующий XML приводит к ошибке чтения."""
         with TemporaryDirectory() as folder:
             with self.assertRaises(FileNotFoundError):
                 load_vfs(Path(folder) / "missing.xml")
 
     def test_invalid_formats(self):
-        """Поврежденные XML, пути и двоичные данные отклоняются."""
         cases = [
             "<vfs>",
             '<root name="bad" />',
