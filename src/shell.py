@@ -5,9 +5,8 @@ MAX_PATH_ARGUMENTS = 1
 
 
 class Shell:
-    def __init__(self, name="default", output=None, vfs=None):
-        self.vfs = vfs
-        self.name = vfs.name if vfs is not None else name
+    def __init__(self, name="default", output=None):
+        self.name = name
         # Обычно вывод идет в консоль, а в тестах сохраняется в памяти.
         self.output = output if output is not None else sys.stdout
         self.running = True

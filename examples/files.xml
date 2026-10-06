@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<vfs name="files">
-  <file name="readme.txt">Пример виртуальной файловой системы.</file>
-  <file name="numbers.txt">one two three</file>
-  <file name="empty.txt" />
-  <file name="binary.bin" encoding="base64">AAEC/w==</file>
-</vfs>

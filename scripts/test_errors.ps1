@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
 $mainPath = Join-Path $projectRoot 'src/main.py'
-$vfsPath = Join-Path $projectRoot 'examples/minimal.xml'
+$vfsPath = Join-Path $projectRoot 'vfs.xml'
 
 foreach ($name in @(
     'error_unknown', 'error_arguments', 'error_exit', 'error_ls'

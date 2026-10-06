@@ -21,20 +21,21 @@ class CLITests(unittest.TestCase):
     def test_interactive(self):
         result = run_cli(commands="ls\nunknown\ncd /docs\nexit\n")
         self.assertEqual(result.returncode, 0)
-        self.assertIn("minimal:/$ ", result.stdout)
+        self.assertIn("vfs:/$ ", result.stdout)
         self.assertIn("Ошибка: неизвестная команда: unknown", result.stdout)
         self.assertIn("cd: аргументы = ['/docs']", result.stdout)
 
-    def test_vfs_examples(self):
-        for name in ("minimal", "files", "deep"):
-            with self.subTest(name=name):
+    def test_config_parameters(self):
+        for path in ("demo.xml", "data/archive.xml"):
+            with self.subTest(path=path):
                 result = run_cli(
-                    "--vfs", f"examples/{name}.xml",
+                    "--vfs", path,
                     "--script", "examples/startup.txt",
                 )
                 self.assertEqual(result.returncode, 0, result.stdout)
-                self.assertIn(f"Загружена VFS: {name}", result.stdout)
-                self.assertIn(f"{name}:/$ exit", result.stdout)
+                self.assertIn(f"VFS: {Path(path)}", result.stdout)
+                self.assertIn(str(Path("examples/startup.txt")), result.stdout)
+                self.assertIn(f"{Path(path).stem}:/$ exit", result.stdout)
 
     def test_script_errors(self):
         for name in ("unknown", "arguments", "exit", "ls"):
@@ -44,16 +45,13 @@ class CLITests(unittest.TestCase):
                 self.assertIn("Ошибка в строке", result.stdout)
                 self.assertNotIn("this-must-not-run", result.stdout)
 
-    def test_loading_errors(self):
-        for name in ("missing", "invalid"):
-            with self.subTest(name=name):
-                result = run_cli(
-                    "--vfs", f"examples/{name}.xml",
-                    "--script", "examples/startup.txt",
-                )
-                self.assertEqual(result.returncode, 1)
-                self.assertIn("Ошибка загрузки VFS:", result.stdout)
-                self.assertNotIn("аргументы =", result.stdout)
+    def test_vfs_parameter_without_script(self):
+        result = run_cli("--vfs", "missing.xml", commands="ls\nexit\n")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("VFS: missing.xml", result.stdout)
+        self.assertIn("Стартовый скрипт: не задан", result.stdout)
+        self.assertIn("missing:/$ ls", result.stdout)
+        self.assertIn("ls: аргументы = []", result.stdout)
 
     def test_missing_script(self):
         result = run_cli("--script", "examples/missing.txt")
