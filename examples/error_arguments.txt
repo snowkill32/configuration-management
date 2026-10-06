@@ -1,3 +1,4 @@
 ls
 cd /one /two
-ls /this-must-not-run
+ls /after-error
+exit

@@ -4,7 +4,7 @@ $mainPath = Join-Path $projectRoot 'src/main.py'
 $startupPath = Join-Path $projectRoot 'examples/startup.txt'
 
 foreach ($name in @('demo', 'other')) {
-    $vfsPath = Join-Path $projectRoot "$name.xml"
+    $vfsPath = Join-Path $projectRoot "$name.csv"
     & python $mainPath --vfs $vfsPath --script $startupPath
     if ($LASTEXITCODE -ne 0) { throw "Explicit parameters failed: $name" }
 

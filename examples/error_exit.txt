@@ -1,2 +1,3 @@
 exit extra
-ls /this-must-not-run
+ls /after-error
+exit

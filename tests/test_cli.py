@@ -26,7 +26,7 @@ class CLITests(unittest.TestCase):
         self.assertIn("cd: аргументы = ['/docs']", result.stdout)
 
     def test_config_parameters(self):
-        for path in ("demo.xml", "data/archive.xml"):
+        for path in ("demo.csv", "data/archive.csv", "my files/demo.csv"):
             with self.subTest(path=path):
                 result = run_cli(
                     "--vfs", path,
@@ -38,17 +38,17 @@ class CLITests(unittest.TestCase):
                 self.assertIn(f"{Path(path).stem}:/$ exit", result.stdout)
 
     def test_script_errors(self):
-        for name in ("unknown", "arguments", "exit", "ls"):
+        for name in ("unknown", "arguments", "exit", "ls", "quotes"):
             with self.subTest(name=name):
                 result = run_cli("--script", f"examples/error_{name}.txt")
-                self.assertEqual(result.returncode, 1)
+                self.assertEqual(result.returncode, 0, result.stdout)
                 self.assertIn("Ошибка в строке", result.stdout)
-                self.assertNotIn("this-must-not-run", result.stdout)
+                self.assertIn("аргументы = ['/after-error']", result.stdout)
 
     def test_vfs_parameter_without_script(self):
-        result = run_cli("--vfs", "missing.xml", commands="ls\nexit\n")
+        result = run_cli("--vfs", "missing.csv", commands="ls\nexit\n")
         self.assertEqual(result.returncode, 0, result.stdout)
-        self.assertIn("VFS: missing.xml", result.stdout)
+        self.assertIn("VFS: missing.csv", result.stdout)
         self.assertIn("Стартовый скрипт: не задан", result.stdout)
         self.assertIn("missing:/$ ls", result.stdout)
         self.assertIn("ls: аргументы = []", result.stdout)

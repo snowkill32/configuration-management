@@ -9,9 +9,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Эмулятор: вариант 24")
+    parser = argparse.ArgumentParser(description="Эмулятор: вариант 25")
     parser.add_argument(
-        "--vfs", type=Path, default=PROJECT_ROOT / "vfs.xml",
+        "--vfs", type=Path, default=PROJECT_ROOT / "vfs.csv",
         help="путь к VFS (на этом этапе файл не загружается)",
     )
     parser.add_argument(
@@ -25,7 +25,7 @@ def main():
     print(f"VFS: {args.vfs}")
     print(f"Стартовый скрипт: {args.script or 'не задан'}")
     shell = Shell(name=args.vfs.stem or "default")
-    # Выполняем файл, только если он указан; False означает ошибку.
+    # False означает, что сам файл команд не удалось прочитать.
     if args.script and not shell.run_script(args.script):
         return 1
     shell.repl()

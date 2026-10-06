@@ -1,3 +1,4 @@
+import shlex
 import sys
 from pathlib import Path
 
@@ -16,10 +17,10 @@ class Shell:
         return f"{self.name}:/$ "
 
     def execute(self, line):
-        parts = line.split()
+        # shlex сохраняет текст в кавычках как один аргумент.
+        parts = shlex.split(line)
         if not parts:
             return
-        # Первое слово — команда, остальные попадают в список args.
         command, *args = parts
         if command == "exit":
             if args:
@@ -56,7 +57,7 @@ class Shell:
                 self.execute(line)
             except ValueError as error:
                 print(f"Ошибка в строке {number}: {error}", file=self.output)
-                return False
+                continue
             if not self.running:
                 break
         return True
