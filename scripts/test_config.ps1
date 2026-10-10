@@ -3,8 +3,8 @@ $projectRoot = Split-Path $PSScriptRoot -Parent
 $mainPath = Join-Path $projectRoot 'src/main.py'
 $startupPath = Join-Path $projectRoot 'examples/startup.txt'
 
-foreach ($name in @('demo', 'other')) {
-    $vfsPath = Join-Path $projectRoot "$name.csv"
+foreach ($name in @('minimal', 'files', 'deep')) {
+    $vfsPath = Join-Path $projectRoot "examples/$name.csv"
     & python $mainPath --vfs $vfsPath --script $startupPath
     if ($LASTEXITCODE -ne 0) { throw "Explicit parameters failed: $name" }
 

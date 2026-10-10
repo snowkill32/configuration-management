@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
 $mainPath = Join-Path $projectRoot 'src/main.py'
-$vfsPath = Join-Path $projectRoot 'vfs.csv'
+$vfsPath = Join-Path $projectRoot 'examples/files.csv'
 $startupPath = Join-Path $projectRoot 'examples/startup.txt'
 
 foreach ($name in @(

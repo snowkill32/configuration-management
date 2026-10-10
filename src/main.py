@@ -3,16 +3,13 @@ from pathlib import Path
 import sys
 
 from shell import Shell
-
-# parents[0] — папка src, parents[1] — папка проекта.
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+from vfs import load_vfs
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Эмулятор: вариант 25")
     parser.add_argument(
-        "--vfs", type=Path, default=PROJECT_ROOT / "vfs.csv",
-        help="путь к VFS (на этом этапе файл не загружается)",
+        "--vfs", type=Path, help="путь к CSV-файлу VFS",
     )
     parser.add_argument(
         "--script", type=Path, help="путь к стартовому скрипту",
@@ -22,9 +19,19 @@ def parse_args():
 
 def main():
     args = parse_args()
-    print(f"VFS: {args.vfs}")
+    print(f"VFS: {args.vfs or 'по умолчанию (в памяти)'}")
     print(f"Стартовый скрипт: {args.script or 'не задан'}")
-    shell = Shell(name=args.vfs.stem or "default")
+    try:
+        vfs = load_vfs(args.vfs)
+        message = vfs.motd()
+    except (OSError, ValueError, UnicodeError) as error:
+        print(f"Ошибка загрузки VFS: {error}")
+        return 1
+    print(f"Загружена VFS: {vfs.name}")
+    print(vfs.describe())
+    if message:
+        print(message)
+    shell = Shell(vfs=vfs)
     # False означает, что сам файл команд не удалось прочитать.
     if args.script and not shell.run_script(args.script):
         return 1
