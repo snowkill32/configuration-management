@@ -1,0 +1,11 @@
+path,type,encoding,data
+/motd,file,utf-8,Добро пожаловать в VFS deep!
+/docs,dir,,
+/docs/notes.txt,file,utf-8,Заметки внутри папки docs.
+/docs/projects,dir,,
+/docs/projects/demo,dir,,
+/docs/projects/demo/data.bin,file,base64,AAEC/w==
+/docs/projects/demo/src,dir,,
+/docs/projects/demo/src/main.txt,file,utf-8,Hello from the deepest directory.
+/my docs,dir,,
+/my docs/readme.txt,file,utf-8,Папка с пробелом в имени.

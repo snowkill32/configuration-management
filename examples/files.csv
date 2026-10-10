@@ -1,0 +1,6 @@
+path,type,encoding,data
+/motd,file,utf-8,Добро пожаловать в VFS files!
+/readme.txt,file,utf-8,"Пример файла, текст в памяти."
+/numbers.txt,file,utf-8,one two three
+/empty.txt,file,utf-8,
+/binary.bin,file,base64,AAEC/w==
