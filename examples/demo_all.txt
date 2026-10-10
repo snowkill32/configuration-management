@@ -1,0 +1,20 @@
+ls
+ls /
+ls /docs
+ls /docs/projects/demo/src
+ls "/my docs"
+cd
+cd /
+cd docs
+cd ..
+cd '/my docs'
+  ls   /docs
+
+unknown
+ls /one /two
+cd /one /two
+exit extra
+ls "/unclosed
+ls /after-error
+exit
+unknown-after-exit

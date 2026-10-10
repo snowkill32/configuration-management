@@ -3,6 +3,7 @@ from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from vfs import load_vfs
@@ -21,6 +22,21 @@ class VFSTests(unittest.TestCase):
         vfs = load_vfs(ROOT / "examples/minimal.csv")
         self.assertEqual(vfs.entries, {"/": None})
         self.assertEqual(vfs.motd(), "")
+
+    def test_default_does_not_read_disk(self):
+        with patch("pathlib.Path.open", side_effect=AssertionError):
+            vfs = load_vfs()
+        self.assertEqual(vfs.entries, {"/": None})
+
+    def test_motd_only_in_root(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "nested.csv"
+            path.write_text(
+                "path,type,encoding,data\n/docs,dir,,\n"
+                "/docs/motd,file,utf-8,not a greeting\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(load_vfs(path).motd(), "")
 
     def test_files_and_motd(self):
         vfs = load_vfs(ROOT / "examples/files.csv")

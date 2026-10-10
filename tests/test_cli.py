@@ -96,6 +96,28 @@ class CLITests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout)
         self.assertIn("my vfs:/$ exit", result.stdout)
 
+    def test_all_commands_with_deep_vfs(self):
+        path = ROOT / "examples/deep.csv"
+        original = path.read_bytes()
+        result = run_cli(
+            "--vfs", str(path), "--script", "examples/demo_all.txt"
+        )
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("/docs/projects/demo/src/main.txt", result.stdout)
+        self.assertIn("аргументы = ['/my docs']", result.stdout)
+        self.assertIn("аргументы = ['/after-error']", result.stdout)
+        self.assertEqual(result.stdout.count("Ошибка в строке"), 5)
+        self.assertNotIn("unknown-after-exit", result.stdout)
+        self.assertEqual(path.read_bytes(), original)
+
+    def test_bad_utf8_csv(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "bad.csv"
+            path.write_bytes(b"path,type,encoding,data\n\xff")
+            result = run_cli("--vfs", str(path), commands="exit\n")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Ошибка загрузки VFS:", result.stdout)
+
     def test_missing_script(self):
         result = run_cli("--script", "examples/missing.txt")
         self.assertEqual(result.returncode, 1)
