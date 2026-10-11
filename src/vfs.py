@@ -73,6 +73,57 @@ class VFS:
             raise ValueError(f"ожидается файл, а не папка: {path}")
         return data
 
+    def destination_path(self, value, source, cwd):
+        if not value:
+            raise ValueError("путь назначения не должен быть пустым")
+        parent, separator, name = value.rpartition("/")
+        if name in ("", ".", ".."):
+            path = self.resolve(value, cwd)
+        else:
+            parent = (parent or "/") if separator else "."
+            parent = self.resolve(parent, cwd)
+            self.require_directory(parent)
+            path = parent.rstrip("/") + "/" + name
+            validate_path(path)
+        if path in self.entries and self.entries[path] is None:
+            path = path.rstrip("/") + "/" + PurePosixPath(source).name
+        return path
+
+    def prepare_transfer(self, value, destination, cwd):
+        source = self.resolve(value, cwd)
+        if source == "/":
+            raise ValueError("корень нельзя копировать или перемещать")
+        target = self.destination_path(destination, source, cwd)
+        if source == target:
+            raise ValueError("исходный путь и назначение совпадают")
+        if target.startswith(source + "/"):
+            raise ValueError("папку нельзя поместить внутрь самой себя")
+        return source, target
+
+    def transfer_entries(self, source, target):
+        # У всех вложенных записей заменяем начало пути на новое.
+        return {
+            target + path[len(source):]: data
+            for path, data in self.entries.items()
+            if path == source or path.startswith(source + "/")
+        }
+
+    def check_replacements(self, changes):
+        for path, data in changes.items():
+            if path in self.entries:
+                old_is_directory = self.entries[path] is None
+                if (data is None) != old_is_directory:
+                    raise ValueError(f"тип назначения не совпадает: {path}")
+
+    def copy(self, value, destination, cwd="/", recursive=False):
+        source, target = self.prepare_transfer(value, destination, cwd)
+        if self.entries[source] is None and not recursive:
+            raise ValueError("для копирования папки нужен cp -r")
+        changes = self.transfer_entries(source, target)
+        # Сначала проверяем все записи, чтобы ошибка не оставила часть копии.
+        self.check_replacements(changes)
+        self.entries.update(changes)
+
 
 def validate_path(path):
     if not path.startswith("/") or path == "/":

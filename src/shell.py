@@ -6,6 +6,7 @@ from pathlib import Path
 from vfs import load_vfs
 
 MAX_PATH_ARGUMENTS = 1
+TRANSFER_ARGUMENTS = 2
 
 
 class Shell:
@@ -34,6 +35,7 @@ class Shell:
             "pwd": self.pwd_command,
             "whoami": self.whoami_command,
             "rev": self.rev_command,
+            "cp": self.cp_command,
         }
         if command not in handlers:
             raise ValueError(f"неизвестная команда: {command}")
@@ -90,6 +92,17 @@ class Shell:
     def print_reversed(self, text):
         for line in text.splitlines():
             print(line[::-1], file=self.output)
+
+    def two_paths(self, args, command):
+        if len(args) != TRANSFER_ARGUMENTS:
+            raise ValueError(f"{command}: нужны исходный путь и назначение")
+        return args
+
+    def cp_command(self, args):
+        recursive = bool(args and args[0] == "-r")
+        paths = args[1:] if recursive else args
+        source, target = self.two_paths(paths, "cp")
+        self.vfs.copy(source, target, self.cwd, recursive)
 
     def repl(self):
         while self.running:
