@@ -66,6 +66,13 @@ class VFS:
             if item != "/" and str(PurePosixPath(item).parent) == path
         )
 
+    def read_file(self, value, cwd="/"):
+        path = self.resolve(value, cwd)
+        data = self.entries[path]
+        if data is None:
+            raise ValueError(f"ожидается файл, а не папка: {path}")
+        return data
+
 
 def validate_path(path):
     if not path.startswith("/") or path == "/":

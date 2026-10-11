@@ -1,0 +1,35 @@
+pwd
+whoami
+ls
+ls /docs
+ls /docs/notes.txt
+cd /docs
+pwd
+ls
+rev notes.txt
+cd projects/demo/src
+pwd
+rev main.txt
+cd ../../../../
+pwd
+cd "/my docs"
+ls
+rev readme.txt
+cd ..
+cd
+cd .
+ls "/my docs"
+ls .
+rev /motd /docs/notes.txt
+rev /docs/projects/demo/data.bin
+rev /docs
+rev /missing.txt
+ls /missing
+cd /docs/notes.txt
+pwd extra
+whoami extra
+unknown
+pwd
+rev
+exit
+unknown-after-exit

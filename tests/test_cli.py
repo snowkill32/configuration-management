@@ -122,6 +122,18 @@ class CLITests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("Ошибка загрузки VFS:", result.stdout)
 
+    def test_stage4_script(self):
+        result = run_cli(
+            "--vfs", "examples/deep.csv",
+            "--script", "examples/stage4.txt", commands="abc\n",
+        )
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("deep:/docs/projects/demo/src$ pwd", result.stdout)
+        self.assertIn("deep:/my docs$ ls", result.stdout)
+        self.assertIn("cba\n", result.stdout)
+        self.assertEqual(result.stdout.count("Ошибка в строке"), 8)
+        self.assertNotIn("unknown-after-exit", result.stdout)
+
     def test_missing_script(self):
         result = run_cli("--script", "examples/missing.txt")
         self.assertEqual(result.returncode, 1)

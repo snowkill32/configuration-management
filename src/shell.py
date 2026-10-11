@@ -1,3 +1,4 @@
+import getpass
 import shlex
 import sys
 from pathlib import Path
@@ -30,15 +31,21 @@ class Shell:
             "exit": self.exit_command,
             "ls": self.ls_command,
             "cd": self.cd_command,
+            "pwd": self.pwd_command,
+            "whoami": self.whoami_command,
+            "rev": self.rev_command,
         }
         if command not in handlers:
             raise ValueError(f"неизвестная команда: {command}")
         handlers[command](args)
 
     def exit_command(self, args):
-        if args:
-            raise ValueError("exit: аргументы не нужны")
+        self.no_arguments(args, "exit")
         self.running = False
+
+    def no_arguments(self, args, command):
+        if args:
+            raise ValueError(f"{command}: аргументы не нужны")
 
     def get_path(self, args, command, default):
         if len(args) > MAX_PATH_ARGUMENTS:
@@ -56,6 +63,33 @@ class Shell:
         path = self.vfs.resolve(value, self.cwd)
         self.vfs.require_directory(path)
         self.cwd = path
+
+    def pwd_command(self, args):
+        self.no_arguments(args, "pwd")
+        print(self.cwd, file=self.output)
+
+    def whoami_command(self, args):
+        self.no_arguments(args, "whoami")
+        print(getpass.getuser(), file=self.output)
+
+    def rev_command(self, args):
+        if not args:
+            # Без файлов rev читает стандартный ввод до его конца (EOF).
+            self.print_reversed(sys.stdin.read())
+            return
+        for value in args:
+            data = self.vfs.read_file(value, self.cwd)
+            try:
+                text = data.decode("utf-8")
+            except UnicodeError as error:
+                raise ValueError(
+                    f"rev: файл не является UTF-8: {value}"
+                ) from error
+            self.print_reversed(text)
+
+    def print_reversed(self, text):
+        for line in text.splitlines():
+            print(line[::-1], file=self.output)
 
     def repl(self):
         while self.running:
