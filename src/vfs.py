@@ -28,6 +28,44 @@ class VFS:
         except UnicodeError as error:
             raise ValueError("motd должен содержать текст UTF-8") from error
 
+    def require_exists(self, path):
+        if path not in self.entries:
+            raise ValueError(f"путь не найден: {path}")
+
+    def require_directory(self, path):
+        self.require_exists(path)
+        if self.entries[path] is not None:
+            raise ValueError(f"не каталог: {path}")
+
+    def resolve(self, value, cwd="/"):
+        if not value:
+            raise ValueError("путь не должен быть пустым")
+        path = "/" if value.startswith("/") else cwd
+        for part in value.split("/"):
+            if not part:
+                continue
+            self.require_directory(path)
+            if part == ".":
+                continue
+            if part == "..":
+                path = str(PurePosixPath(path).parent)
+            else:
+                path = path.rstrip("/") + "/" + part
+            self.require_exists(path)
+        if value.endswith("/"):
+            self.require_directory(path)
+        return path
+
+    def list_directory(self, value=".", cwd="/"):
+        path = self.resolve(value, cwd)
+        if self.entries[path] is not None:
+            return [PurePosixPath(path).name]
+        # Показываем только прямых потомков, без содержимого вложенных папок.
+        return sorted(
+            PurePosixPath(item).name for item in self.entries
+            if item != "/" and str(PurePosixPath(item).parent) == path
+        )
+
 
 def validate_path(path):
     if not path.startswith("/") or path == "/":

@@ -7,21 +7,28 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from shell import Shell
+from vfs import VFS
 
 
 class ShellTests(unittest.TestCase):
     def setUp(self):
         self.output = io.StringIO()
-        self.shell = Shell("test-vfs", self.output)
+        vfs = VFS("test-vfs", {
+            "/": None, "/docs": None, "/docs/notes.txt": b"notes",
+            "/my docs": None, "/my docs/readme.txt": b"text", "/later": None,
+        })
+        self.shell = Shell(output=self.output, vfs=vfs)
 
     def test_prompt(self):
         self.assertEqual(self.shell.prompt, "test-vfs:/$ ")
 
-    def test_stubs(self):
+    def test_list_and_cd(self):
         self.shell.execute("  ls   /docs  ")
+        self.shell.execute("cd /docs")
+        self.assertEqual(self.shell.cwd, "/docs")
+        self.assertEqual(self.output.getvalue(), "notes.txt\n")
         self.shell.execute("cd")
-        self.assertIn("ls: аргументы = ['/docs']", self.output.getvalue())
-        self.assertIn("cd: аргументы = []", self.output.getvalue())
+        self.assertEqual(self.shell.cwd, "/")
 
     def test_empty_input(self):
         self.shell.execute("   ")
@@ -34,12 +41,13 @@ class ShellTests(unittest.TestCase):
                 self.output.truncate(0)
                 self.shell.execute(line)
                 self.assertIn(
-                    "ls: аргументы = ['/my docs']", self.output.getvalue()
+                    "readme.txt", self.output.getvalue()
                 )
 
     def test_empty_quoted_argument(self):
-        self.shell.execute('cd ""')
-        self.assertIn("cd: аргументы = ['']", self.output.getvalue())
+        with self.assertRaises(ValueError):
+            self.shell.execute('cd ""')
+        self.assertEqual(self.shell.cwd, "/")
 
     def test_unclosed_quotes(self):
         with self.assertRaises(ValueError):
@@ -61,7 +69,7 @@ class ShellTests(unittest.TestCase):
         with patch("builtins.input", side_effect=["unknown", "ls", "exit"]):
             self.shell.repl()
         self.assertIn("Ошибка:", self.output.getvalue())
-        self.assertIn("ls: аргументы = []", self.output.getvalue())
+        self.assertIn("docs\n", self.output.getvalue())
         self.assertFalse(self.shell.running)
 
     def test_script_continues_after_error(self):
@@ -72,7 +80,28 @@ class ShellTests(unittest.TestCase):
         text = self.output.getvalue()
         self.assertIn("test-vfs:/$ ls", text)
         self.assertIn("Ошибка в строке 2:", text)
-        self.assertIn("cd: аргументы = ['/later']", text)
+        self.assertEqual(self.shell.cwd, "/later")
+
+    def test_relative_paths_and_parent(self):
+        self.shell.execute("cd docs")
+        self.assertEqual(self.shell.prompt, "test-vfs:/docs$ ")
+        self.shell.execute("ls ./notes.txt")
+        self.assertEqual(self.output.getvalue(), "notes.txt\n")
+        self.shell.execute("cd ../my\\ docs")
+        self.assertEqual(self.shell.cwd, "/my docs")
+        self.shell.execute("cd ../../..")
+        self.assertEqual(self.shell.cwd, "/")
+
+    def test_failed_cd_keeps_directory(self):
+        self.shell.execute("cd /docs")
+        for value in ("/missing", "/docs/notes.txt", "/docs/notes.txt/.."):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                self.shell.execute(f"cd {value}")
+            self.assertEqual(self.shell.cwd, "/docs")
+
+    def test_list_is_not_recursive(self):
+        self.shell.execute("ls /")
+        self.assertEqual(self.output.getvalue(), "docs\nlater\nmy docs\n")
 
     def test_script_exit(self):
         with TemporaryDirectory() as folder:

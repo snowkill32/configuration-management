@@ -20,11 +20,14 @@ def run_cli(*args, commands=""):
 
 class CLITests(unittest.TestCase):
     def test_interactive(self):
-        result = run_cli(commands="ls\nunknown\ncd /docs\nexit\n")
+        result = run_cli(
+            "--vfs", "examples/deep.csv",
+            commands="ls\nunknown\ncd /docs\nexit\n",
+        )
         self.assertEqual(result.returncode, 0)
-        self.assertIn("vfs:/$ ", result.stdout)
+        self.assertIn("deep:/$ ", result.stdout)
         self.assertIn("Ошибка: неизвестная команда: unknown", result.stdout)
-        self.assertIn("cd: аргументы = ['/docs']", result.stdout)
+        self.assertIn("deep:/docs$ ", result.stdout)
 
     def test_config_parameters(self):
         for path in ("examples/minimal.csv", "examples/files.csv",
@@ -37,7 +40,7 @@ class CLITests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stdout)
                 self.assertIn(f"VFS: {Path(path)}", result.stdout)
                 self.assertIn(str(Path("examples/startup.txt")), result.stdout)
-                self.assertIn(f"{Path(path).stem}:/$ exit", result.stdout)
+                self.assertRegex(result.stdout, r":.*\$ exit")
 
     def test_script_errors(self):
         for name in ("unknown", "arguments", "exit", "ls", "quotes"):
@@ -45,7 +48,8 @@ class CLITests(unittest.TestCase):
                 result = run_cli("--script", f"examples/error_{name}.txt")
                 self.assertEqual(result.returncode, 0, result.stdout)
                 self.assertIn("Ошибка в строке", result.stdout)
-                self.assertIn("аргументы = ['/after-error']", result.stdout)
+                self.assertIn("vfs:/$ ls /", result.stdout)
+                self.assertEqual(result.stdout.count("Ошибка в строке"), 1)
 
     def test_vfs_parameter_without_script(self):
         result = run_cli("--vfs", "examples/files.csv", commands="ls\nexit\n")
@@ -54,7 +58,7 @@ class CLITests(unittest.TestCase):
         self.assertIn("Стартовый скрипт: не задан", result.stdout)
         self.assertIn("files:/$ ", result.stdout)
         self.assertIn("Добро пожаловать в VFS files!", result.stdout)
-        self.assertIn("ls: аргументы = []", result.stdout)
+        self.assertIn("binary.bin\n", result.stdout)
 
     def test_default_in_memory(self):
         result = run_cli(commands="exit\n")
@@ -71,7 +75,7 @@ class CLITests(unittest.TestCase):
                 )
                 self.assertEqual(result.returncode, 1)
                 self.assertIn("Ошибка загрузки VFS:", result.stdout)
-                self.assertNotIn("ls: аргументы", result.stdout)
+                self.assertNotIn("$ ls", result.stdout)
 
     def test_motd_before_commands(self):
         result = run_cli(
@@ -104,8 +108,8 @@ class CLITests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stdout)
         self.assertIn("/docs/projects/demo/src/main.txt", result.stdout)
-        self.assertIn("аргументы = ['/my docs']", result.stdout)
-        self.assertIn("аргументы = ['/after-error']", result.stdout)
+        self.assertIn("deep:/my docs$ ", result.stdout)
+        self.assertIn("readme.txt\n", result.stdout)
         self.assertEqual(result.stdout.count("Ошибка в строке"), 5)
         self.assertNotIn("unknown-after-exit", result.stdout)
         self.assertEqual(path.read_bytes(), original)

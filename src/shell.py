@@ -2,20 +2,23 @@ import shlex
 import sys
 from pathlib import Path
 
+from vfs import load_vfs
+
 MAX_PATH_ARGUMENTS = 1
 
 
 class Shell:
     def __init__(self, name="default", output=None, vfs=None):
-        self.vfs = vfs
+        self.vfs = vfs if vfs is not None else load_vfs()
         self.name = vfs.name if vfs is not None else name
         # Обычно вывод идет в консоль, а в тестах сохраняется в памяти.
         self.output = output if output is not None else sys.stdout
         self.running = True
+        self.cwd = "/"
 
     @property
     def prompt(self):
-        return f"{self.name}:/$ "
+        return f"{self.name}:{self.cwd}$ "
 
     def execute(self, line):
         # shlex сохраняет текст в кавычках как один аргумент.
@@ -23,16 +26,36 @@ class Shell:
         if not parts:
             return
         command, *args = parts
-        if command == "exit":
-            if args:
-                raise ValueError("exit: аргументы не нужны")
-            self.running = False
-        elif command in ("ls", "cd"):
-            if len(args) > MAX_PATH_ARGUMENTS:
-                raise ValueError(f"{command}: допустим один путь")
-            print(f"{command}: аргументы = {args}", file=self.output)
-        else:
+        handlers = {
+            "exit": self.exit_command,
+            "ls": self.ls_command,
+            "cd": self.cd_command,
+        }
+        if command not in handlers:
             raise ValueError(f"неизвестная команда: {command}")
+        handlers[command](args)
+
+    def exit_command(self, args):
+        if args:
+            raise ValueError("exit: аргументы не нужны")
+        self.running = False
+
+    def get_path(self, args, command, default):
+        if len(args) > MAX_PATH_ARGUMENTS:
+            raise ValueError(f"{command}: допустим один путь")
+        return args[0] if args else default
+
+    def ls_command(self, args):
+        path = self.get_path(args, "ls", ".")
+        names = self.vfs.list_directory(path, self.cwd)
+        if names:
+            print("\n".join(names), file=self.output)
+
+    def cd_command(self, args):
+        value = self.get_path(args, "cd", "/")
+        path = self.vfs.resolve(value, self.cwd)
+        self.vfs.require_directory(path)
+        self.cwd = path
 
     def repl(self):
         while self.running:

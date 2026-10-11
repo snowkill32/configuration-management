@@ -1,4 +1,4 @@
 ls
 cd /one /two
-ls /after-error
+ls /
 exit
