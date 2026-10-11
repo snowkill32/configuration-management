@@ -134,6 +134,35 @@ class CLITests(unittest.TestCase):
         self.assertEqual(result.stdout.count("Ошибка в строке"), 8)
         self.assertNotIn("unknown-after-exit", result.stdout)
 
+    def test_stage5_script_and_restart(self):
+        source = ROOT / "examples/deep.csv"
+        original = source.read_bytes()
+        result = run_cli(
+            "--vfs", str(source), "--script", "examples/stage5.txt",
+        )
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn(
+            "deep:/renamed-backup/projects/demo/src$ pwd", result.stdout,
+        )
+        self.assertIn("/renamed-backup/projects/demo/src\n", result.stdout)
+        self.assertIn("renamed copy.txt\n", result.stdout)
+        self.assertIn("binary-moved.bin\n", result.stdout)
+        self.assertIn("папка назначения не пуста", result.stdout)
+        self.assertEqual(result.stdout.count("Ошибка в строке"), 22)
+        self.assertNotIn("unknown-after-exit", result.stdout)
+        self.assertEqual(source.read_bytes(), original)
+        fresh = run_cli("--vfs", str(source), commands="ls /\nexit\n")
+        self.assertEqual(fresh.returncode, 0, fresh.stdout)
+        self.assertNotIn("binary-moved.bin", fresh.stdout)
+        self.assertNotIn("renamed-backup", fresh.stdout)
+
+    def test_stage5_with_empty_vfs(self):
+        result = run_cli("--script", "examples/stage5.txt")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("Ошибка в строке", result.stdout)
+        self.assertIn("vfs:/$ exit", result.stdout)
+        self.assertNotIn("unknown-after-exit", result.stdout)
+
     def test_missing_script(self):
         result = run_cli("--script", "examples/missing.txt")
         self.assertEqual(result.returncode, 1)

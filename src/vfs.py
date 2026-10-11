@@ -124,6 +124,22 @@ class VFS:
         self.check_replacements(changes)
         self.entries.update(changes)
 
+    def move(self, value, destination, cwd="/"):
+        source, target = self.prepare_transfer(value, destination, cwd)
+        if target in self.entries and self.entries[target] is None:
+            if self.list_directory(target):
+                raise ValueError(f"папка назначения не пуста: {target}")
+        changes = self.transfer_entries(source, target)
+        self.check_replacements(changes)
+        for path in list(self.entries):
+            if path == source or path.startswith(source + "/"):
+                del self.entries[path]
+        self.entries.update(changes)
+        # Если перенесли текущую папку или её родителя, обновляем cwd.
+        if cwd == source or cwd.startswith(source + "/"):
+            cwd = target + cwd[len(source):]
+        return cwd
+
 
 def validate_path(path):
     if not path.startswith("/") or path == "/":

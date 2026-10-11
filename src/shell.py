@@ -36,6 +36,7 @@ class Shell:
             "whoami": self.whoami_command,
             "rev": self.rev_command,
             "cp": self.cp_command,
+            "mv": self.mv_command,
         }
         if command not in handlers:
             raise ValueError(f"неизвестная команда: {command}")
@@ -103,6 +104,10 @@ class Shell:
         paths = args[1:] if recursive else args
         source, target = self.two_paths(paths, "cp")
         self.vfs.copy(source, target, self.cwd, recursive)
+
+    def mv_command(self, args):
+        source, target = self.two_paths(args, "mv")
+        self.cwd = self.vfs.move(source, target, self.cwd)
 
     def repl(self):
         while self.running:

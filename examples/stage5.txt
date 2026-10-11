@@ -1,0 +1,61 @@
+pwd
+cp /docs/notes.txt /copy.txt
+rev /copy.txt
+rev /docs/notes.txt
+cp /copy.txt "/my docs"
+ls "/my docs"
+cd "/my docs"
+cp copy.txt "other copy.txt"
+mv "other copy.txt" "renamed copy.txt"
+ls .
+cd /
+cp /motd /copy.txt
+rev /copy.txt
+mv /copy.txt /moved.txt
+cp /docs/notes.txt /overwrite.txt
+mv /moved.txt /overwrite.txt
+rev /overwrite.txt
+mv /overwrite.txt /docs
+ls /docs
+cp /docs/projects/demo/data.bin /binary-copy.bin
+mv /binary-copy.bin /binary-moved.bin
+ls /binary-moved.bin
+cp -r /docs /backup
+ls /backup/projects/demo/src
+cp -r /docs/projects "/my docs"
+ls "/my docs/projects/demo"
+cp -r /docs/projects "/my docs"
+cp -r /motd /recursive-file.txt
+cd /backup/projects/demo/src
+mv /backup /renamed-backup
+pwd
+rev main.txt
+cd /
+mv /renamed-backup "/my docs"
+ls "/my docs/renamed-backup"
+cp
+cp /docs/notes.txt
+cp a b c
+cp /missing /new.txt
+cp /docs /new-dir
+cp /docs/notes.txt /missing/new.txt
+cp /docs/notes.txt ""
+cp /docs/notes.txt /missing/
+cp /docs/notes.txt /docs/notes.txt
+cp -r /docs /docs/projects
+cp -r /docs /docs/notes.txt
+cp -r / /root-copy
+mv
+mv /docs
+mv a b c
+mv /missing /new.txt
+mv /docs/notes.txt /missing/new.txt
+mv /docs/notes.txt /docs/notes.txt
+mv /docs /docs/projects
+mv /docs /motd
+mv /docs/projects "/my docs"
+mv / /new-root
+pwd
+ls /docs
+exit
+unknown-after-exit
