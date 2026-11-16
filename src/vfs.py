@@ -60,7 +60,6 @@ class VFS:
         path = self.resolve(value, cwd)
         if self.entries[path] is not None:
             return [PurePosixPath(path).name]
-        # Показываем только прямых потомков, без содержимого вложенных папок.
         return sorted(
             PurePosixPath(item).name for item in self.entries
             if item != "/" and str(PurePosixPath(item).parent) == path
